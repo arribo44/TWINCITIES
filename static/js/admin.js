@@ -8,12 +8,6 @@ const adminState = {
     twinPagination: { page: 1, pageSize: 50, totalPages: 1 },
 };
 
-function escapeHtml(value) {
-    return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-    })[ch]);
-}
-
 function fetchJson(url, options = {}) {
     const csrfMeta = document.querySelector('meta[name="csrf-token"]');
     const opts = {
@@ -29,13 +23,19 @@ function fetchJson(url, options = {}) {
         if (response.status === 401) {
             // not authenticated -> redirect to login
             window.location = '/login';
-            return Promise.reject({ error: 'Authentification requise' });
+            return Promise.reject({ error: t("error.auth_required") });
         }
         if (!response.ok) {
-            return response.json().then((j) => Promise.reject(j)).catch(() => Promise.reject({ error: 'Erreur réseau' }));
+            return response.json().then((j) => Promise.reject(j)).catch(() => Promise.reject({ error: t("error.network") }));
         }
         return response.json();
     });
+}
+
+// les libellés des batchs sont stockés en français en base
+function batchLabel(label) {
+    const key = `batch.${label}`;
+    return key in I18N.messages ? I18N.messages[key] : label;
 }
 
 function getTwinCount(cityId) {
@@ -68,15 +68,15 @@ function renderCityTable() {
             <td>${city.search_twin ? '<i class="fas fa-times text-danger"></i>' : ""}</td>
             <td>${escapeHtml(city.id_wikidata)}</td>
             <td class="text-nowrap">
-                <button class="btn btn-sm btn-primary mr-1" data-id="${city.id}" data-action="edit" title="Éditer"><i class="fas fa-pencil-alt"></i></button>
-                <button class="btn btn-sm btn-danger" data-id="${city.id}" data-action="delete" title="Supprimer"><i class="fas fa-trash-alt"></i></button>
+                <button class="btn btn-sm btn-primary mr-1" data-id="${city.id}" data-action="edit" title="${escapeHtml(t("admin.edit"))}"><i class="fas fa-pencil-alt"></i></button>
+                <button class="btn btn-sm btn-danger" data-id="${city.id}" data-action="delete" title="${escapeHtml(t("admin.delete"))}"><i class="fas fa-trash-alt"></i></button>
             </td>
         `;
         tbody.appendChild(row);
     });
 
     const pageInfo = document.getElementById("cityPageInfo");
-    if (pageInfo) pageInfo.textContent = `Page ${pagination.page} / ${totalPages} (${fullList.length} villes)`;
+    if (pageInfo) pageInfo.textContent = tn("admin.page.info_cities", fullList.length, { page: pagination.page, pages: totalPages });
     const firstBtn = document.getElementById("cityPageFirst");
     const prevBtn = document.getElementById("cityPagePrev");
     const nextBtn = document.getElementById("cityPageNext");
@@ -150,14 +150,14 @@ function renderTwinTable() {
             <td>${escapeHtml(cityB ? cityB.pays : "")}</td>
             <td>${twin.distance_km}</td>
             <td class="text-nowrap">
-                <button class="btn btn-sm btn-danger" data-id="${twin.id}" data-action="delete" title="Supprimer"><i class="fas fa-trash-alt"></i></button>
+                <button class="btn btn-sm btn-danger" data-id="${twin.id}" data-action="delete" title="${escapeHtml(t("admin.delete"))}"><i class="fas fa-trash-alt"></i></button>
             </td>
         `;
         tbody.appendChild(row);
     });
 
     const pageInfo = document.getElementById("twinPageInfo");
-    if (pageInfo) pageInfo.textContent = `Page ${pagination.page} / ${totalPages} (${fullList.length} jumelages)`;
+    if (pageInfo) pageInfo.textContent = tn("admin.page.info_twins", fullList.length, { page: pagination.page, pages: totalPages });
     const firstBtn = document.getElementById("twinPageFirst");
     const prevBtn = document.getElementById("twinPagePrev");
     const nextBtn = document.getElementById("twinPageNext");
@@ -180,14 +180,14 @@ function populateTwinFilterOptions() {
         const sel = document.getElementById(id);
         if (!sel) return;
         const previous = sel.value;
-        sel.innerHTML = '<option value="">Tous</option>' + countries.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+        sel.innerHTML = `<option value="">${escapeHtml(t("admin.all"))}</option>` + countries.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
         if (previous && countries.includes(previous)) sel.value = previous;
     });
     ['filterTwinContinentA', 'filterTwinContinentB'].forEach((id) => {
         const sel = document.getElementById(id);
         if (!sel) return;
         const previous = sel.value;
-        sel.innerHTML = '<option value="">Tous</option>' + continents.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+        sel.innerHTML = `<option value="">${escapeHtml(t("admin.all"))}</option>` + continents.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
         if (previous && continents.includes(previous)) sel.value = previous;
     });
 }
@@ -231,7 +231,7 @@ function populateFilterOptions() {
     const previousContinent = contSel.value;
 
     const continents = uniqueSorted(adminState.cities.map(c=>c.continent));
-    contSel.innerHTML = '<option value="">Tous</option>' + continents.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+    contSel.innerHTML = `<option value="">${escapeHtml(t("admin.all"))}</option>` + continents.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
     contSel.value = (previousContinent && continents.includes(previousContinent)) ? previousContinent : '';
 
     const continentFilter = contSel.value;
@@ -239,7 +239,7 @@ function populateFilterOptions() {
         ? adminState.cities.filter(c => c.continent === continentFilter)
         : adminState.cities;
     const countries = uniqueSorted(countryScope.map(c=>c.pays));
-    countrySel.innerHTML = '<option value="">Tous</option>' + countries.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+    countrySel.innerHTML = `<option value="">${escapeHtml(t("admin.all"))}</option>` + countries.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
     countrySel.value = (previousCountry && countries.includes(previousCountry)) ? previousCountry : '';
 
     if (cityNameList) {
@@ -334,20 +334,20 @@ function bindCityForm() {
         wikidataUpdateBtn.addEventListener('click', (e) => {
             e.preventDefault();
             const cityId = parseInt((document.getElementById('cityId')||{value:''}).value, 10) || null;
-            if (!cityId) { alert('Sélectionnez d\'abord la ville dans la liste.'); return; }
+            if (!cityId) { alert(t("admin.cities.select_first")); return; }
             wikidataUpdateBtn.disabled = true;
             fetchJson(`/api/admin/cities/${cityId}/wikidata_population`, { method: 'POST' }).then((res) => {
                 if (res && typeof res.population !== 'undefined') {
                     document.getElementById('cityPopulation').value = res.population;
                     loadAdminData();
-                    alert('Population mise à jour: ' + res.population);
+                    alert(t("admin.cities.population_updated", { n: formatNumber(res.population) }));
                 } else {
-                    alert('Aucune population trouvée');
+                    alert(t("admin.cities.population_not_found"));
                 }
             }).catch((e)=>{
                 console.error('Wikidata update error', e);
                 const msg = (e && e.error) ? e.error : JSON.stringify(e);
-                alert('Erreur mise à jour Wikidata: ' + msg);
+                alert(t("admin.cities.wikidata_update_error", { msg }));
             }).finally(()=>{ wikidataUpdateBtn.disabled = false; });
         });
     }
@@ -402,7 +402,7 @@ function bindCityForm() {
                 }
                 openWikidataModal(wikicode, city, results, subjectContinent);
             }).catch((err) => {
-                alert('Erreur lors de la récupération Wikidata');
+                alert(t("admin.cities.wikidata_fetch_error"));
                 console.error(err);
             });
         });
@@ -440,7 +440,7 @@ function bindTableActions() {
                 document.getElementById("cityLongitude").value = city.longitude;
                 window.scrollTo({ top: 0, behavior: "smooth" });
             }
-            if (action === "delete" && confirm("Supprimer cette ville ?")) {
+            if (action === "delete" && confirm(t("admin.cities.confirm_delete"))) {
                 fetchJson(`/api/admin/cities/${id}`, { method: "DELETE" }).then(loadAdminData).catch(() => {});
             }
         });
@@ -453,7 +453,7 @@ function bindTableActions() {
             if (!button) return;
             const id = button.dataset.id;
             const action = button.dataset.action;
-            if (action === "delete" && confirm("Supprimer ce jumelage ?")) {
+            if (action === "delete" && confirm(t("admin.twins.confirm_delete"))) {
                 fetchJson(`/api/admin/twins/${id}`, { method: "DELETE" }).then(loadAdminData).catch(() => {});
             }
         });
@@ -465,26 +465,26 @@ function loadBatchsData() {
     if (!select) return;
     fetchJson("/api/admin/batchs").then((batchs) => {
         adminState.batchs = batchs;
-        select.innerHTML = '<option value="">-- Choisir un batch --</option>'
-            + batchs.map((b) => `<option value="${b.id}">${escapeHtml(b.libelle_batch)}</option>`).join('');
+        select.innerHTML = `<option value="">${escapeHtml(t("admin.batchs.choose"))}</option>`
+            + batchs.map((b) => `<option value="${b.id}">${escapeHtml(batchLabel(b.libelle_batch))}</option>`).join('');
     });
 }
 
 function runHabitantsCorrection(button) {
     const pays = button.dataset.pays;
     if (!pays) return;
-    if (!confirm(`Lancer la correction des habitants pour ${pays} ?`)) return;
+    if (!confirm(t("admin.batchs.correction_confirm", { country: pays }))) return;
     button.disabled = true;
     const icon = button.querySelector('i');
     if (icon) icon.className = 'fas fa-spinner fa-spin';
     fetchJson('/api/admin/habitants/correction', { method: 'POST', body: JSON.stringify({ pays }) }).then((res) => {
-        alert(`${res.updated} enregistrement(s) ont été faits sur un total de ${res.total}.`);
+        alert(t("admin.batchs.correction_done", { updated: formatNumber(res.updated), total: formatNumber(res.total) }));
         const success = res.updated === res.total;
         button.classList.remove('btn-warning');
         button.classList.add(success ? 'btn-success' : 'btn-danger');
         if (icon) icon.className = success ? 'fas fa-check' : 'fas fa-times';
     }).catch((err) => {
-        const msg = (err && err.error) ? err.error : "Erreur lors de la correction des habitants";
+        const msg = (err && err.error) ? err.error : t("admin.batchs.correction_error");
         alert(msg);
         button.classList.remove('btn-warning');
         button.classList.add('btn-danger');
@@ -501,12 +501,12 @@ function renderBatchResultsTable(columns, rows, batch) {
         return;
     }
     const withCorrection = !!batch && batch.libelle_batch === 'Villes sans habitants';
-    const headCols = withCorrection ? columns.concat(['Correction']) : columns;
+    const headCols = withCorrection ? columns.concat([t("admin.batchs.correction")]) : columns;
     const thead = `<thead><tr>${headCols.map((c) => `<th>${escapeHtml(c)}</th>`).join('')}</tr></thead>`;
     const tbody = `<tbody>${rows.map((row) => {
         const cells = columns.map((c) => `<td>${escapeHtml(row[c])}</td>`).join('');
         const correctionCell = withCorrection
-            ? `<td><button type="button" class="btn btn-sm btn-warning batch-correction-btn" data-pays="${escapeHtml(row.pays)}" title="Corriger les habitants manquants pour ${escapeHtml(row.pays)}"><i class="fas fa-bolt"></i></button></td>`
+            ? `<td><button type="button" class="btn btn-sm btn-warning batch-correction-btn" data-pays="${escapeHtml(row.pays)}" title="${escapeHtml(t("admin.batchs.correction_title", { country: row.pays }))}"><i class="fas fa-bolt"></i></button></td>`
             : '';
         return `<tr>${cells}${correctionCell}</tr>`;
     }).join('')}</tbody>`;
@@ -538,7 +538,7 @@ function bindBatchControls() {
     executeBtn.addEventListener("click", () => {
         const batchId = select.value;
         if (!batchId) return;
-        if (!confirm("Exécuter cette requête SQL sur la base ?")) return;
+        if (!confirm(t("admin.batchs.confirm"))) return;
         const batch = (adminState.batchs || []).find((b) => String(b.id) === batchId);
         executeBtn.disabled = true;
         if (resultsTable) resultsTable.innerHTML = "";
@@ -546,15 +546,15 @@ function bindBatchControls() {
             const durationMsg = (typeof res.duration_ms !== 'undefined') ? ` (${res.duration_ms} ms)` : '';
             if (Array.isArray(res.rows)) {
                 if (resultBox) {
-                    resultBox.innerHTML = `<div class="alert alert-success">Requête exécutée avec succès : ${res.rows.length} enregistrement(s)${durationMsg}.</div>`;
+                    resultBox.innerHTML = `<div class="alert alert-success">${escapeHtml(t("admin.batchs.query_ok", { n: formatNumber(res.rows.length), duration: durationMsg }))}</div>`;
                 }
                 renderBatchResultsTable(res.columns, res.rows, batch);
             } else if (resultBox) {
-                resultBox.innerHTML = `<div class="alert alert-success">Batch exécuté avec succès : ${res.rows_affected} ligne(s) affectée(s)${durationMsg}.</div>`;
+                resultBox.innerHTML = `<div class="alert alert-success">${escapeHtml(t("admin.batchs.update_ok", { n: formatNumber(res.rows_affected), duration: durationMsg }))}</div>`;
             }
         }).catch((err) => {
             if (resultBox) {
-                const msg = (err && err.error) ? err.error : "Erreur lors de l'exécution du batch";
+                const msg = (err && err.error) ? err.error : t("admin.batchs.error");
                 resultBox.innerHTML = `<div class="alert alert-danger">${escapeHtml(msg)}</div>`;
             }
         }).finally(() => {
@@ -723,7 +723,7 @@ function openWikidataModal(wikicode, city, results, subjectContinent) {
     const header = document.getElementById('wikidataModalHeader');
     const tbody = document.getElementById('wikidataResults');
     if (!tbody) return;
-    header.textContent = `Ville: ${city ? city.nom : '—'}  — Wikidata: ${wikicode}`;
+    header.textContent = t("admin.wikidata.header", { city: city ? city.nom : "—", code: wikicode });
     tbody.innerHTML = '';
     results.forEach((r, idx) => {
         const tr = document.createElement('tr');
@@ -735,9 +735,9 @@ function openWikidataModal(wikicode, city, results, subjectContinent) {
             (t.ville1_id === existingCity.id && t.ville2_id === city.id)
         ));
         const addBtnAttrs = cityExists ? 'disabled' : '';
-        const addBtnLabel = cityExists ? 'Exists' : 'Add';
+        const addBtnLabel = escapeHtml(cityExists ? t("admin.wikidata.exists") : t("admin.wikidata.add"));
         const twinBtnAttrs = twinExists ? 'disabled' : '';
-        const twinBtnLabel = twinExists ? 'Exists' : 'Twin';
+        const twinBtnLabel = escapeHtml(twinExists ? t("admin.wikidata.exists") : t("admin.wikidata.twin"));
         tr.innerHTML = `
             <td>${escapeHtml(r.label || r.wikidata)}</td>
             <td>${escapeHtml(r.country)}</td>
@@ -771,22 +771,22 @@ function openWikidataModal(wikicode, city, results, subjectContinent) {
                         if (resp && resp.existed) {
                             loadAdminData();
                             btn.disabled = true;
-                            btn.textContent = 'Exists';
+                            btn.textContent = t("admin.wikidata.exists");
                         } else {
                             loadAdminData();
                             btn.disabled = true;
-                            btn.textContent = 'Added';
+                            btn.textContent = t("admin.wikidata.added");
                         }
                 }).catch((e) => {
                     console.error('Create city error:', e);
                     const msg = (e && e.error) ? e.error : (e && e.message) ? e.message : JSON.stringify(e);
-                    alert('Erreur création ville: ' + msg);
+                    alert(t("admin.wikidata.city_error", { msg }));
                 });
             }
             if (action === 'twin') {
                 // create twin between current city and this item
                 const currentCityId = (document.getElementById('cityId')||{value:''}).value;
-                if (!currentCityId) { alert('Sélectionnez d\'abord la ville cible dans le formulaire.'); return; }
+                if (!currentCityId) { alert(t("admin.wikidata.select_target")); return; }
                 // find if item already exists in DB by wikidata
                 const existing = adminState.cities.find(c => c.id_wikidata === item.wikidata);
                 const ensureAndTwin = (otherId) => {
@@ -797,8 +797,8 @@ function openWikidataModal(wikicode, city, results, subjectContinent) {
                     const dist = computeDistanceKm(lat1, lon1, lat2, lon2);
                     fetchJson('/api/admin/twins', { method: 'POST', body: JSON.stringify({ ville1_id: parseInt(currentCityId,10), ville2_id: otherId, distance_km: dist }) }).then((resp) => {
                         loadAdminData();
-                        btn.disabled = true; if (resp && resp.existed) btn.textContent = 'Exists'; else btn.textContent = 'Twinned';
-                    }).catch((e) => { console.error(e); alert('Erreur création jumelage'); });
+                        btn.disabled = true; btn.textContent = (resp && resp.existed) ? t("admin.wikidata.exists") : t("admin.wikidata.twinned");
+                    }).catch((e) => { console.error(e); alert(t("admin.wikidata.twin_error")); });
                 };
 
                 if (existing) {
@@ -821,7 +821,7 @@ function openWikidataModal(wikicode, city, results, subjectContinent) {
                     }).catch((e) => {
                         console.error('Create city (twin) error:', e);
                         const msg = (e && e.error) ? e.error : (e && e.message) ? e.message : JSON.stringify(e);
-                        alert('Erreur création ville: ' + msg);
+                        alert(t("admin.wikidata.city_error", { msg }));
                     });
                 }
             }

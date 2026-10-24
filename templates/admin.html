@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="{{ lang }}">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
-    <title>Admin - Twin Cities</title>
+    <title>{{ t('admin.title') }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="/static/vendor/overlayscrollbars/OverlayScrollbars.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" />
@@ -19,20 +19,23 @@
         </ul>
         <ul class="navbar-nav ml-auto">
             <li class="nav-item d-none d-sm-inline-block">
-                <a href="/" class="nav-link">Retour au public</a>
+                <a href="/" class="nav-link">{{ t('admin.back_public') }}</a>
             </li>
             <li class="nav-item d-none d-sm-inline-block">
                 <form method="post" action="/logout" class="d-inline">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-                    <button type="submit" class="btn btn-link nav-link">Déconnexion</button>
+                    <button type="submit" class="btn btn-link nav-link">{{ t('admin.logout') }}</button>
                 </form>
+            </li>
+            <li class="nav-item d-flex align-items-center ml-2">
+                {% include "_lang_switch.html" %}
             </li>
         </ul>
     </nav>
 
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
         <a href="/admin" class="brand-link">
-            <span class="brand-text font-weight-light">Admin Twin Cities</span>
+            <span class="brand-text font-weight-light">{{ t('admin.brand') }}</span>
         </a>
         <div class="sidebar">
             <nav class="mt-2">
@@ -40,19 +43,19 @@
                     <li class="nav-item">
                         <a href="/admin/cities" class="nav-link {{ 'active' if request.path == '/admin/cities' else '' }}">
                             <i class="nav-icon fas fa-city"></i>
-                            <p>Villes</p>
+                            <p>{{ t('admin.nav.cities') }}</p>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="/admin/twins" class="nav-link {{ 'active' if request.path == '/admin/twins' else '' }}">
                             <i class="nav-icon fas fa-handshake"></i>
-                            <p>Jumelages</p>
+                            <p>{{ t('admin.nav.twins') }}</p>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="/admin/batchs" class="nav-link {{ 'active' if request.path == '/admin/batchs' else '' }}">
                             <i class="nav-icon fas fa-cogs"></i>
-                            <p>Batchs</p>
+                            <p>{{ t('admin.nav.batchs') }}</p>
                         </a>
                     </li>
                 </ul>
@@ -65,7 +68,7 @@
             <div class="container-fluid">
                 <div class="row mb-2">
                     <div class="col-sm-6">
-                        <h1>Back-office</h1>
+                        <h1>{{ t('admin.heading') }}</h1>
                     </div>
                 </div>
             </div>
@@ -80,13 +83,14 @@
 
     <footer class="main-footer">
         <div class="float-right d-none d-sm-inline">AdminLTE</div>
-        <strong>Back-office Twin Cities</strong>
+        <strong>{{ t('admin.footer') }}</strong>
     </footer>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+{% include "_i18n.html" %}
 <script src="/static/js/admin.js"></script>
 </body>
 </html>

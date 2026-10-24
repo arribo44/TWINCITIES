@@ -11,7 +11,7 @@ The bundled database contains about 1,760 cities and 4,300 twinning links, enric
 - **World map**: every city is plotted on a Leaflet map and coloured by its number of twinnings. Click a city to draw its links and list its twin cities.
 - **Search** by city or country name, with an optional population filter.
 - **Statistics**: top countries, breakdown by continent, distances and a choropleth map of twinnings by country.
-- **Bilingual interface**: the public pages are available in French and English. Use the FR / EN switch in the top-right corner. The language is detected from the browser on the first visit.
+- **Bilingual interface**: the whole site, back office included, is available in French and English. Use the FR / EN switch in the top-right corner. The language is detected from the browser on the first visit.
 - **Back office** (login required):
   - manage cities and twinning links;
   - import twin cities and population figures from Wikidata;
@@ -21,7 +21,7 @@ The bundled database contains about 1,760 cities and 4,300 twinning links, enric
 
 ### Statistics
 
-Key figures, top 10 countries, breakdown by continent and a choropleth map of twinnings by country.
+Key figures, top 10 countries, breakdown by continent, a choropleth map of twinnings by country, the scope of twinnings (same country, same continent, intercontinental), the 10 longest and shortest twinnings, and the 10 most twinned cities.
 
 ![Statistics page](docs/screenshots/statistics.png)
 
@@ -37,7 +37,7 @@ All twinning links with Paris as city B. Each link can be removed with the red d
 
 ![Back office, twinning links of Paris](docs/screenshots/admin-twins-paris.png)
 
-> The back office is currently available in French only.
+> Data such as country and continent names is stored in French and shown as-is in the back office, so that it can be edited.
 
 ## Requirements
 

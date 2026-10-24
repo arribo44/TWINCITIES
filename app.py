@@ -628,8 +628,8 @@ def csrf_protect():
     expected = session.get("csrf_token", "")
     if not expected or not hmac.compare_digest(sent, expected):
         if request.path.startswith("/api/"):
-            return jsonify({"error": "Jeton CSRF invalide, rechargez la page"}), 400
-        abort(400, "Jeton CSRF invalide, rechargez la page")
+            return jsonify({"error": t("error.csrf")}), 400
+        abort(400, t("error.csrf"))
     return None
 
 
@@ -642,7 +642,7 @@ def login_required(view):
     def wrapped_view(*args, **kwargs):
         if not is_logged_in():
             if request.path.startswith("/api/"):
-                return jsonify({"error": "Authentification requise"}), 401
+                return jsonify({"error": t("error.auth_required")}), 401
             return redirect(url_for("login", next=request.path))
         return view(*args, **kwargs)
     return wrapped_view
@@ -743,7 +743,7 @@ def api_cities():
 def api_city(city_id):
     city = query_db("SELECT * FROM Villes WHERE id = ?", (city_id,), one=True)
     if city is None:
-        return jsonify({"error": "Ville non trouvée"}), 404
+        return jsonify({"error": t("error.city_not_found")}), 404
 
     twin_rows = query_db(
         """
@@ -849,7 +849,46 @@ def api_stats():
         """
     )
 
+    twin_pairs_sql = """
+        SELECT a.nom AS ville1, a.pays AS pays1, b.nom AS ville2, b.pays AS pays2, t.distance_km
+        FROM TwinCities t
+        JOIN Villes a ON a.id = t.ville1_id
+        JOIN Villes b ON b.id = t.ville2_id
+        WHERE t.distance_km IS NOT NULL
+        ORDER BY t.distance_km {order}
+        LIMIT 10
+    """
+    longest = query_db(twin_pairs_sql.format(order="DESC"))
+    shortest = query_db(twin_pairs_sql.format(order="ASC"))
+    top_cities = query_db(
+        """
+        SELECT v.nom AS label, v.pays AS pays, COUNT(*) AS value
+        FROM Villes v
+        JOIN TwinCities t ON v.id IN (t.ville1_id, t.ville2_id)
+        GROUP BY v.id
+        ORDER BY value DESC, v.nom
+        LIMIT 10
+        """
+    )
+    # portée géographique : même pays, même continent (pays différents) ou intercontinental
+    scope = query_db(
+        """
+        SELECT
+            SUM(a.pays = b.pays) AS same_country,
+            SUM(a.pays <> b.pays AND a.continent = b.continent) AS same_continent,
+            SUM(a.continent <> b.continent) AS intercontinental
+        FROM TwinCities t
+        JOIN Villes a ON a.id = t.ville1_id
+        JOIN Villes b ON b.id = t.ville2_id
+        """,
+        one=True,
+    )
+
     return jsonify({
+        "longest": [dict(row) for row in longest],
+        "shortest": [dict(row) for row in shortest],
+        "top_cities": [dict(row) for row in top_cities],
+        "scope": {key: scope[key] or 0 for key in scope.keys()},
         "total_countries": total_countries["total_countries"],
         "total_cities": totals["total_cities"],
         "total_links": total_links["total_links"],
@@ -885,11 +924,11 @@ def api_admin_add_city():
         data = request.get_json(silent=True) or {}
     except Exception as e:
         app.logger.exception("Failed parsing JSON in api_admin_add_city")
-        return jsonify({"error": "JSON invalide"}), 400
+        return jsonify({"error": t("error.invalid_json")}), 400
     required = ["nom", "pays", "continent", "latitude", "longitude", "habitants"]
     if not all(field in data for field in required):
         app.logger.debug(f"api_admin_add_city missing fields, data: {data}")
-        return jsonify({"error": "Champs manquants: nom, pays, continent, latitude, longitude et habitants requis"}), 400
+        return jsonify({"error": t("error.missing_city_fields")}), 400
 
     # Validate habitants as integer (allow strings that can be cast)
     try:
@@ -898,7 +937,7 @@ def api_admin_add_city():
         habitants_val = int(data.get("habitants"))
     except Exception:
         app.logger.debug(f"api_admin_add_city invalid habitants, data: {data}")
-        return jsonify({"error": "Le champ 'habitants' doit être un entier"}), 400
+        return jsonify({"error": t("error.population_int")}), 400
     # If id_wikidata provided, avoid duplicate: return existing id
     id_wd = (data.get("id_wikidata") or "").strip()
     if id_wd:
@@ -921,10 +960,10 @@ def api_admin_add_city():
         )
     except sqlite3.IntegrityError as e:
         app.logger.exception("IntegrityError inserting city")
-        return jsonify({"error": "Erreur base de données: contrainte violée"}), 400
+        return jsonify({"error": t("error.db_constraint")}), 400
     except Exception:
         app.logger.exception("Unexpected error inserting city")
-        return jsonify({"error": "Erreur interne lors de la création de la ville"}), 500
+        return jsonify({"error": t("error.city_create")}), 500
     # Pré‑télécharger le drapeau du pays si possible (ne bloque pas en cas d'erreur)
     try:
         fetch_flag_image(data["pays"])
@@ -939,18 +978,18 @@ def api_admin_add_city():
 def api_admin_update_city(city_id):
     existing = query_db("SELECT * FROM Villes WHERE id = ?", (city_id,), one=True)
     if existing is None:
-        return jsonify({"error": "Ville non trouvée"}), 404
+        return jsonify({"error": t("error.city_not_found")}), 404
     # les champs absents de la requête conservent leur valeur actuelle
     data = {**dict(existing), **(request.get_json(silent=True) or {})}
     if not data.get("nom") or not data.get("pays"):
-        return jsonify({"error": "Les champs 'nom' et 'pays' ne peuvent pas être vides"}), 400
+        return jsonify({"error": t("error.name_country_required")}), 400
     try:
         if data.get("habitants") in (None, ""):
             data["habitants"] = None
         else:
             data["habitants"] = int(data["habitants"])
     except (TypeError, ValueError):
-        return jsonify({"error": "Le champ 'habitants' doit être un entier"}), 400
+        return jsonify({"error": t("error.population_int")}), 400
 
     execute_db(
         "UPDATE Villes SET nom = ?, habitants = ?, pays = ?, continent = ?, latitude = ?, longitude = ?, id_wikidata = ? WHERE id = ?",
@@ -1042,7 +1081,7 @@ def api_admin_execute_batch(batch_id):
 def api_admin_wikidata_twins():
     wikidata = (request.args.get("wikidata") or "").strip()
     if not wikidata:
-        return jsonify({"error": "Paramètre wikidata manquant"}), 400
+        return jsonify({"error": t("error.wikidata_param")}), 400
 
     # Normalize to Qxxx
     if not wikidata.upper().startswith("Q"):
@@ -1073,7 +1112,7 @@ def api_admin_wikidata_twins():
         with urllib.request.urlopen(req, timeout=20) as resp:
             data = json.load(resp)
     except Exception as e:
-        return jsonify({"error": "Erreur lors de la requête SPARQL", "details": str(e)}), 502
+        return jsonify({"error": t("error.sparql"), "details": str(e)}), 502
 
     # Aggregate results per twin and keep the most recent population when available
     results_map = {}
@@ -1206,28 +1245,28 @@ def api_admin_update_population_from_wikidata(city_id):
     # Fetch city and ensure it has an id_wikidata
     city = query_db("SELECT id, nom, id_wikidata FROM Villes WHERE id = ?", (city_id,), one=True)
     if city is None:
-        return jsonify({"error": "Ville non trouvée"}), 404
+        return jsonify({"error": t("error.city_not_found")}), 404
     try:
         id_wd = city["id_wikidata"]
     except Exception:
         id_wd = None
     if not id_wd:
-        return jsonify({"error": "Aucun id Wikidata disponible pour cette ville"}), 400
+        return jsonify({"error": t("error.no_wikidata_id")}), 400
 
     try:
         best_pop = fetch_wikidata_population(id_wd)
     except Exception as e:
         app.logger.exception("Erreur SPARQL population")
-        return jsonify({"error": "Erreur lors de la requête SPARQL", "details": str(e)}), 502
+        return jsonify({"error": t("error.sparql"), "details": str(e)}), 502
 
     if best_pop is None:
-        return jsonify({"error": "Population introuvable sur Wikidata"}), 404
+        return jsonify({"error": t("error.population_not_found")}), 404
 
     try:
         execute_db("UPDATE Villes SET habitants = ? WHERE id = ?", (best_pop, city_id))
     except Exception:
         app.logger.exception("Erreur updating population in DB")
-        return jsonify({"error": "Erreur interne lors de la mise à jour"}), 500
+        return jsonify({"error": t("error.update_internal")}), 500
 
     # Try to prefetch flag for this city after update
     try:
@@ -1246,7 +1285,7 @@ def api_admin_correction_habitants():
     data = request.json or {}
     pays = data.get("pays")
     if not pays:
-        return jsonify({"error": "Paramètre 'pays' requis"}), 400
+        return jsonify({"error": t("error.country_required")}), 400
 
     cities = query_db(
         """
@@ -1282,12 +1321,12 @@ def api_admin_add_twin():
         a = int(data["ville1_id"])
         b = int(data["ville2_id"])
     except (KeyError, TypeError, ValueError):
-        return jsonify({"error": "Champs ville1_id et ville2_id requis"}), 400
+        return jsonify({"error": t("error.twin_ids_required")}), 400
     if a == b:
-        return jsonify({"error": "Une ville ne peut pas être jumelée avec elle-même"}), 400
+        return jsonify({"error": t("error.self_twin")}), 400
     distance = twin_distance_km(a, b)
     if distance is None:
-        return jsonify({"error": "Ville non trouvée"}), 404
+        return jsonify({"error": t("error.city_not_found")}), 404
     # avoid duplicate twin links in either order
     existing = query_db(
         "SELECT id FROM TwinCities WHERE (ville1_id = ? AND ville2_id = ?) OR (ville1_id = ? AND ville2_id = ?)",
@@ -1309,18 +1348,18 @@ def api_admin_add_twin():
 def api_admin_update_twin(twin_id):
     existing = query_db("SELECT ville1_id, ville2_id FROM TwinCities WHERE id = ?", (twin_id,), one=True)
     if existing is None:
-        return jsonify({"error": "Jumelage non trouvé"}), 404
+        return jsonify({"error": t("error.twin_not_found")}), 404
     data = request.get_json(silent=True) or {}
     try:
         a = int(data.get("ville1_id", existing["ville1_id"]))
         b = int(data.get("ville2_id", existing["ville2_id"]))
     except (TypeError, ValueError):
-        return jsonify({"error": "Identifiants de ville invalides"}), 400
+        return jsonify({"error": t("error.invalid_city_ids")}), 400
     if a == b:
-        return jsonify({"error": "Une ville ne peut pas être jumelée avec elle-même"}), 400
+        return jsonify({"error": t("error.self_twin")}), 400
     distance = twin_distance_km(a, b)
     if distance is None:
-        return jsonify({"error": "Ville non trouvée"}), 404
+        return jsonify({"error": t("error.city_not_found")}), 404
     execute_db(
         "UPDATE TwinCities SET ville1_id = ?, ville2_id = ?, distance_km = ? WHERE id = ?",
         (a, b, distance, twin_id),
@@ -1338,7 +1377,7 @@ def api_admin_delete_twin(twin_id):
 @app.errorhandler(404)
 def page_not_found(error):
     if request.path.startswith("/api/") or request.path == "/flag":
-        return jsonify({"error": "Ressource introuvable"}), 404
+        return jsonify({"error": t("error.not_found")}), 404
     fact = None
     try:
         # un jumelage tiré au hasard, pour agrémenter la page d'erreur

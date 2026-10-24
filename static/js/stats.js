@@ -30,6 +30,8 @@ function buildChart(canvasId, labels, values, labelText, color) {
 
 let countryChart = null;
 let continentChart = null;
+let scopeChart = null;
+let topCitiesChart = null;
 
 const CHOROPLETH_GEOJSON_URL =
     "https://raw.githubusercontent.com/martynafford/natural-earth-geojson/master/50m/cultural/ne_50m_admin_0_countries.json";
@@ -142,6 +144,85 @@ function updateStats(stats) {
     continentChart = buildChart("statsContinentChart", continentLabels, continentValues, t("stats.dataset"), "rgba(40, 167, 69, 0.8)");
 
     updateChoropleth(stats.country_map);
+    buildScopeChart(stats.scope);
+    renderTwinPairsTable("statsLongestTable", stats.longest);
+    renderTwinPairsTable("statsShortestTable", stats.shortest);
+    buildTopCitiesChart(stats.top_cities);
+}
+
+function flagImg(country) {
+    return `<img src="/flag?country=${encodeURIComponent(country)}" class="flag-icon" alt="" onerror="this.remove()" />`;
+}
+
+function cityCell(city, country) {
+    return `${flagImg(country)}<strong>${escapeHtml(city)}</strong> <span class="country">(${escapeHtml(countryName(country))})</span>`;
+}
+
+function renderTwinPairsTable(tbodyId, pairs) {
+    const tbody = document.getElementById(tbodyId);
+    tbody.innerHTML = pairs.map((pair, index) => `
+        <tr>
+            <td class="text-right text-muted">${index + 1}</td>
+            <td>${cityCell(pair.ville1, pair.pays1)}<span class="pair-sep">↔</span>${cityCell(pair.ville2, pair.pays2)}</td>
+            <td class="text-right text-nowrap">${formatNumber(Math.round(pair.distance_km))} km</td>
+        </tr>
+    `).join("");
+}
+
+function buildScopeChart(scope) {
+    if (scopeChart) scopeChart.destroy();
+    const keys = ["same_country", "same_continent", "intercontinental"];
+    const values = keys.map((key) => scope[key]);
+    const total = values.reduce((sum, value) => sum + value, 0) || 1;
+    scopeChart = new Chart(document.getElementById("statsScopeChart"), {
+        type: "doughnut",
+        data: {
+            labels: keys.map((key) => t(`stats.scope.${key}`)),
+            datasets: [{
+                data: values,
+                // du plus proche au plus lointain : rampe de bleus de la carte
+                backgroundColor: [CHOROPLETH_RAMP[3], CHOROPLETH_RAMP[7], CHOROPLETH_RAMP[11]],
+                borderColor: "#fff",
+                borderWidth: 2,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: "bottom" },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => ` ${ctx.label}${colon()}${formatNumber(ctx.raw)} (${formatNumber(Math.round(ctx.raw * 100 / total))} %)`,
+                    },
+                },
+            },
+        },
+    });
+}
+
+function buildTopCitiesChart(cities) {
+    if (topCitiesChart) topCitiesChart.destroy();
+    topCitiesChart = new Chart(document.getElementById("statsTopCitiesChart"), {
+        type: "bar",
+        data: {
+            labels: cities.map((city) => `${city.label} (${countryName(city.pays)})`),
+            datasets: [{
+                label: t("stats.twinnings"),
+                data: cities.map((city) => city.value),
+                backgroundColor: "rgba(60, 141, 188, 0.8)",
+                borderColor: "rgba(60, 141, 188, 0.8)",
+                borderWidth: 1,
+            }],
+        },
+        options: {
+            indexAxis: "y",
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { x: { beginAtZero: true } },
+        },
+    });
 }
 
 window.addEventListener("DOMContentLoaded", () => {

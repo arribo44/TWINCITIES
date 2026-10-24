@@ -16,52 +16,52 @@
     <div class="col-12">
         <div class="card card-primary">
             <div class="card-header">
-                <h3 class="card-title">Gestion des villes</h3>
+                <h3 class="card-title">{{ t('admin.cities.title') }}</h3>
                 <div class="card-tools d-flex align-items-center" style="gap:8px">
                     <div class="input-group input-group-sm">
-                        <div class="input-group-prepend"><span class="input-group-text">Continent</span></div>
-                        <select id="filterContinent" class="form-control form-control-sm"><option value="">Tous</option></select>
+                        <div class="input-group-prepend"><span class="input-group-text">{{ t('admin.continent') }}</span></div>
+                        <select id="filterContinent" class="form-control form-control-sm"><option value="">{{ t('admin.all') }}</option></select>
                     </div>
                     <div class="input-group input-group-sm">
-                        <div class="input-group-prepend"><span class="input-group-text">Pays</span></div>
-                        <select id="filterCountry" class="form-control form-control-sm"><option value="">Tous</option></select>
+                        <div class="input-group-prepend"><span class="input-group-text">{{ t('admin.country') }}</span></div>
+                        <select id="filterCountry" class="form-control form-control-sm"><option value="">{{ t('admin.all') }}</option></select>
                     </div>
                     <div class="input-group input-group-sm">
-                        <div class="input-group-prepend"><span class="input-group-text">Ville</span></div>
-                        <input id="filterCityName" list="cityNameOptions" class="form-control form-control-sm" placeholder="Nom de ville" autocomplete="off" />
+                        <div class="input-group-prepend"><span class="input-group-text">{{ t('admin.city') }}</span></div>
+                        <input id="filterCityName" list="cityNameOptions" class="form-control form-control-sm" placeholder="{{ t('admin.city_name_placeholder') }}" autocomplete="off" />
                         <datalist id="cityNameOptions"></datalist>
                     </div>
                     <div class="input-group input-group-sm">
                         <div class="input-group-prepend"><span class="input-group-text">SearchTwin</span></div>
                         <select id="filterSearchTwin" class="form-control form-control-sm">
-                            <option value="">Tous</option>
-                            <option value="1">Oui</option>
-                            <option value="0">Non</option>
+                            <option value="">{{ t('admin.all') }}</option>
+                            <option value="1">{{ t('admin.yes') }}</option>
+                            <option value="0">{{ t('admin.no') }}</option>
                         </select>
                     </div>
                     <div class="input-group input-group-sm">
-                        <div class="input-group-prepend"><span class="input-group-text">Nbre jumelage</span></div>
+                        <div class="input-group-prepend"><span class="input-group-text">{{ t('admin.cities.twin_count') }}</span></div>
                         <select id="filterTwinCountOp" class="form-control form-control-sm">
                             <option value="">--</option>
-                            <option value=">">Plus</option>
-                            <option value="<">Moins</option>
-                            <option value="=">Egal</option>
+                            <option value=">">{{ t('admin.more') }}</option>
+                            <option value="<">{{ t('admin.less') }}</option>
+                            <option value="=">{{ t('admin.equal') }}</option>
                         </select>
                         <input id="filterTwinCountVal" type="number" class="form-control form-control-sm" placeholder="0" />
                     </div>
                     <div class="input-group input-group-sm">
-                        <div class="input-group-prepend"><span class="input-group-text">Habitants</span></div>
+                        <div class="input-group-prepend"><span class="input-group-text">{{ t('admin.population') }}</span></div>
                         <select id="filterHabitantsOp" class="form-control form-control-sm">
                             <option value="">--</option>
-                            <option value=">">Plus</option>
-                            <option value="<">Moins</option>
-                            <option value="=">Egal</option>
+                            <option value=">">{{ t('admin.more') }}</option>
+                            <option value="<">{{ t('admin.less') }}</option>
+                            <option value="=">{{ t('admin.equal') }}</option>
                         </select>
                         <input id="filterHabitantsVal" type="number" class="form-control form-control-sm" placeholder="0" />
                     </div>
                     <div>
-                        <button id="filterApply" class="btn btn-sm btn-primary">Filtrer</button>
-                        <button id="filterReset" class="btn btn-sm btn-secondary">Réinitialiser</button>
+                        <button id="filterApply" class="btn btn-sm btn-primary">{{ t('admin.filter') }}</button>
+                        <button id="filterReset" class="btn btn-sm btn-secondary">{{ t('admin.reset') }}</button>
                     </div>
                 </div>
             </div>
@@ -69,25 +69,25 @@
                 <form id="cityForm">
                     <div class="form-row">
                         <div class="form-group col-md-3">
-                            <label for="cityName">Nom</label>
+                            <label for="cityName">{{ t('admin.name') }}</label>
                             <input id="cityName" class="form-control" required />
                         </div>
                         <div class="form-group col-md-3">
-                            <label for="cityCountry">Pays</label>
+                            <label for="cityCountry">{{ t('admin.country') }}</label>
                             <input id="cityCountry" class="form-control" required />
                         </div>
                         <div class="form-group col-md-3">
-                            <label for="cityContinent">Continent</label>
+                            <label for="cityContinent">{{ t('admin.continent') }}</label>
                             <input id="cityContinent" class="form-control" required />
                         </div>
                         <div class="form-group col-md-3">
-                            <label for="cityWikidata">Id Wikidata
+                            <label for="cityWikidata">{{ t('admin.cities.wikidata_id') }}
                                 <button id="openWikidataBtn" type="button" class="btn btn-sm btn-outline-info ml-2" style="vertical-align:baseline;">Wikidata</button>
                             </label>
                             <div class="input-group">
                                 <input id="cityWikidata" class="form-control" placeholder="Q12345" />
                                 <div class="input-group-append">
-                                    <button id="wikidataFetchBtn" class="btn btn-outline-primary" type="button" disabled>Maj jumelage Wikidata</button>
+                                    <button id="wikidataFetchBtn" class="btn btn-outline-primary" type="button" disabled>{{ t('admin.cities.wikidata_fetch') }}</button>
                                 </div>
                             </div>
                         </div>
@@ -95,27 +95,27 @@
 
                     <div class="form-row">
                         <div class="form-group col-md-3">
-                            <label for="cityPopulation">Habitants</label>
+                            <label for="cityPopulation">{{ t('admin.population') }}</label>
                             <div class="input-group">
                                 <input id="cityPopulation" type="number" class="form-control" />
                                 <div class="input-group-append">
-                                    <button id="cityWikidataUpdateBtn" class="btn btn-outline-secondary" type="button" style="display:none">MAJ Wikidata</button>
+                                    <button id="cityWikidataUpdateBtn" class="btn btn-outline-secondary" type="button" style="display:none">{{ t('admin.cities.wikidata_population') }}</button>
                                 </div>
                             </div>
                         </div>
                         <div class="form-group col-md-3">
-                            <label for="cityLatitude">Latitude</label>
+                            <label for="cityLatitude">{{ t('admin.latitude') }}</label>
                             <input id="cityLatitude" type="number" step="any" class="form-control" required />
                         </div>
                         <div class="form-group col-md-3">
-                            <label for="cityLongitude">Longitude</label>
+                            <label for="cityLongitude">{{ t('admin.longitude') }}</label>
                             <input id="cityLongitude" type="number" step="any" class="form-control" required />
                         </div>
                         <div class="form-group col-md-3 d-flex align-items-end">
                             <input type="hidden" id="cityId" />
                             <div>
-                                <button class="btn btn-success mr-2" type="submit">Enregistrer</button>
-                                <button id="cityReset" class="btn btn-secondary" type="button">Réinitialiser</button>
+                                <button class="btn btn-success mr-2" type="submit">{{ t('admin.save') }}</button>
+                                <button id="cityReset" class="btn btn-secondary" type="button">{{ t('admin.reset') }}</button>
                             </div>
                         </div>
                     </div>
@@ -124,21 +124,21 @@
                 <table class="table table-sm table-hover">
                     <thead>
                         <tr>
-                            <th class="sortable" data-sort="nom">Nom <i class="fas fa-sort"></i></th>
-                            <th class="sortable col-pays" data-sort="pays">Pays <i class="fas fa-sort"></i></th>
-                            <th class="sortable" data-sort="habitants">Habitants <i class="fas fa-sort"></i></th>
-                            <th class="sortable" data-sort="continent">Continent <i class="fas fa-sort"></i></th>
-                            <th class="sortable" data-sort="twinCount">Nbre de Jumelage <i class="fas fa-sort"></i></th>
+                            <th class="sortable" data-sort="nom">{{ t('admin.name') }} <i class="fas fa-sort"></i></th>
+                            <th class="sortable col-pays" data-sort="pays">{{ t('admin.country') }} <i class="fas fa-sort"></i></th>
+                            <th class="sortable" data-sort="habitants">{{ t('admin.population') }} <i class="fas fa-sort"></i></th>
+                            <th class="sortable" data-sort="continent">{{ t('admin.continent') }} <i class="fas fa-sort"></i></th>
+                            <th class="sortable" data-sort="twinCount">{{ t('admin.cities.twin_count_col') }} <i class="fas fa-sort"></i></th>
                             <th class="sortable" data-sort="search_twin">SearchTwin <i class="fas fa-sort"></i></th>
                             <th>Wikidata</th>
-                            <th>Actions</th>
+                            <th>{{ t('admin.actions') }}</th>
                         </tr>
                     </thead>
                     <tbody id="cityTable"></tbody>
                 </table>
                 <div class="d-flex flex-wrap align-items-center justify-content-between mt-2" style="gap:8px">
                     <div class="input-group input-group-sm" style="width:auto">
-                        <div class="input-group-prepend"><span class="input-group-text">Lignes</span></div>
+                        <div class="input-group-prepend"><span class="input-group-text">{{ t('admin.rows') }}</span></div>
                         <select id="cityPageSize" class="form-control form-control-sm">
                             <option value="50">50</option>
                             <option value="100">100</option>
@@ -146,13 +146,13 @@
                         </select>
                     </div>
                     <div class="d-flex align-items-center" style="gap:4px">
-                        <button id="cityPageFirst" class="btn btn-sm btn-outline-secondary" type="button" title="Première page"><i class="fas fa-angle-double-left"></i></button>
-                        <button id="cityPagePrev" class="btn btn-sm btn-outline-secondary" type="button" title="Page précédente"><i class="fas fa-angle-left"></i></button>
+                        <button id="cityPageFirst" class="btn btn-sm btn-outline-secondary" type="button" title="{{ t('admin.page.first') }}"><i class="fas fa-angle-double-left"></i></button>
+                        <button id="cityPagePrev" class="btn btn-sm btn-outline-secondary" type="button" title="{{ t('admin.page.prev') }}"><i class="fas fa-angle-left"></i></button>
                         <span id="cityPageInfo" class="mx-2 text-nowrap">Page 1 / 1</span>
-                        <button id="cityPageNext" class="btn btn-sm btn-outline-secondary" type="button" title="Page suivante"><i class="fas fa-angle-right"></i></button>
-                        <button id="cityPageLast" class="btn btn-sm btn-outline-secondary" type="button" title="Dernière page"><i class="fas fa-angle-double-right"></i></button>
-                        <input id="cityPageGoto" type="number" min="1" class="form-control form-control-sm ml-2" style="width:70px" placeholder="N° page" />
-                        <button id="cityPageGo" class="btn btn-sm btn-outline-primary" type="button" title="Aller à la page"><i class="fas fa-arrow-right"></i></button>
+                        <button id="cityPageNext" class="btn btn-sm btn-outline-secondary" type="button" title="{{ t('admin.page.next') }}"><i class="fas fa-angle-right"></i></button>
+                        <button id="cityPageLast" class="btn btn-sm btn-outline-secondary" type="button" title="{{ t('admin.page.last') }}"><i class="fas fa-angle-double-right"></i></button>
+                        <input id="cityPageGoto" type="number" min="1" class="form-control form-control-sm ml-2" style="width:70px" placeholder="{{ t('admin.page.number') }}" />
+                        <button id="cityPageGo" class="btn btn-sm btn-outline-primary" type="button" title="{{ t('admin.page.goto') }}"><i class="fas fa-arrow-right"></i></button>
                     </div>
                 </div>
                                 <!-- Wikidata results modal -->
@@ -160,8 +160,8 @@
                                     <div class="modal-dialog modal-lg" role="document">
                                         <div class="modal-content">
                                             <div class="modal-header">
-                                                <h5 class="modal-title" id="wikidataModalLabel">Jumelages Wikidata</h5>
-                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                <h5 class="modal-title" id="wikidataModalLabel">{{ t('admin.wikidata.title') }}</h5>
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="{{ t('admin.close') }}">
                                                     <span aria-hidden="true">&times;</span>
                                                 </button>
                                             </div>
@@ -169,13 +169,13 @@
                                                 <div id="wikidataModalHeader" class="mb-3"></div>
                                                 <table class="table table-sm">
                                                     <thead>
-                                                        <tr><th>Nom</th><th>Pays</th><th>Coord</th><th>Actions</th></tr>
+                                                        <tr><th>{{ t('admin.name') }}</th><th>{{ t('admin.country') }}</th><th>{{ t('admin.wikidata.coord') }}</th><th>{{ t('admin.actions') }}</th></tr>
                                                     </thead>
                                                     <tbody id="wikidataResults"></tbody>
                                                 </table>
                                             </div>
                                             <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ t('admin.close') }}</button>
                                             </div>
                                         </div>
                                     </div>

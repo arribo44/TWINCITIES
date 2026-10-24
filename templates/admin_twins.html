@@ -10,55 +10,55 @@
     <div class="col-12">
         <div class="card card-secondary">
             <div class="card-header">
-                <h3 class="card-title">Gestion des jumelages</h3>
+                <h3 class="card-title">{{ t('admin.twins.title') }}</h3>
             </div>
             <div class="card-body">
                 <div class="d-flex flex-wrap align-items-center mb-2" style="gap:8px">
                     <div class="input-group input-group-sm" style="width:auto">
-                        <div class="input-group-prepend"><span class="input-group-text">Ville A</span></div>
-                        <input id="filterTwinCityNameA" list="twinCityNameOptions" class="form-control form-control-sm" placeholder="Nom de ville" autocomplete="off" />
+                        <div class="input-group-prepend"><span class="input-group-text">{{ t('admin.twins.city_a') }}</span></div>
+                        <input id="filterTwinCityNameA" list="twinCityNameOptions" class="form-control form-control-sm" placeholder="{{ t('admin.city_name_placeholder') }}" autocomplete="off" />
                     </div>
                     <div class="input-group input-group-sm" style="width:auto">
-                        <div class="input-group-prepend"><span class="input-group-text">Pays A</span></div>
-                        <select id="filterTwinCountryA" class="form-control form-control-sm"><option value="">Tous</option></select>
+                        <div class="input-group-prepend"><span class="input-group-text">{{ t('admin.twins.country_a') }}</span></div>
+                        <select id="filterTwinCountryA" class="form-control form-control-sm"><option value="">{{ t('admin.all') }}</option></select>
                     </div>
                     <div class="input-group input-group-sm" style="width:auto">
-                        <div class="input-group-prepend"><span class="input-group-text">Continent A</span></div>
-                        <select id="filterTwinContinentA" class="form-control form-control-sm"><option value="">Tous</option></select>
+                        <div class="input-group-prepend"><span class="input-group-text">{{ t('admin.twins.continent_a') }}</span></div>
+                        <select id="filterTwinContinentA" class="form-control form-control-sm"><option value="">{{ t('admin.all') }}</option></select>
                     </div>
                 </div>
                 <div class="d-flex flex-wrap align-items-center mb-2" style="gap:8px">
                     <div class="input-group input-group-sm" style="width:auto">
-                        <div class="input-group-prepend"><span class="input-group-text">Ville B</span></div>
-                        <input id="filterTwinCityNameB" list="twinCityNameOptions" class="form-control form-control-sm" placeholder="Nom de ville" autocomplete="off" />
+                        <div class="input-group-prepend"><span class="input-group-text">{{ t('admin.twins.city_b') }}</span></div>
+                        <input id="filterTwinCityNameB" list="twinCityNameOptions" class="form-control form-control-sm" placeholder="{{ t('admin.city_name_placeholder') }}" autocomplete="off" />
                     </div>
                     <div class="input-group input-group-sm" style="width:auto">
-                        <div class="input-group-prepend"><span class="input-group-text">Pays B</span></div>
-                        <select id="filterTwinCountryB" class="form-control form-control-sm"><option value="">Tous</option></select>
+                        <div class="input-group-prepend"><span class="input-group-text">{{ t('admin.twins.country_b') }}</span></div>
+                        <select id="filterTwinCountryB" class="form-control form-control-sm"><option value="">{{ t('admin.all') }}</option></select>
                     </div>
                     <div class="input-group input-group-sm" style="width:auto">
-                        <div class="input-group-prepend"><span class="input-group-text">Continent B</span></div>
-                        <select id="filterTwinContinentB" class="form-control form-control-sm"><option value="">Tous</option></select>
+                        <div class="input-group-prepend"><span class="input-group-text">{{ t('admin.twins.continent_b') }}</span></div>
+                        <select id="filterTwinContinentB" class="form-control form-control-sm"><option value="">{{ t('admin.all') }}</option></select>
                     </div>
-                    <button id="filterTwinReset" class="btn btn-sm btn-secondary" title="Réinitialiser"><i class="fas fa-undo"></i></button>
+                    <button id="filterTwinReset" class="btn btn-sm btn-secondary" title="{{ t('admin.reset') }}" aria-label="{{ t('admin.reset') }}"><i class="fas fa-undo"></i></button>
                 </div>
                 <datalist id="twinCityNameOptions"></datalist>
                 <table class="table table-sm table-hover">
                     <thead>
                         <tr>
-                            <th class="sortable" data-sort="villeA">Ville A <i class="fas fa-sort"></i></th>
-                            <th class="sortable" data-sort="paysA">Pays A <i class="fas fa-sort"></i></th>
-                            <th class="sortable" data-sort="villeB">Ville B <i class="fas fa-sort"></i></th>
-                            <th class="sortable" data-sort="paysB">Pays B <i class="fas fa-sort"></i></th>
-                            <th>Distance</th>
-                            <th>Actions</th>
+                            <th class="sortable" data-sort="villeA">{{ t('admin.twins.city_a') }} <i class="fas fa-sort"></i></th>
+                            <th class="sortable" data-sort="paysA">{{ t('admin.twins.country_a') }} <i class="fas fa-sort"></i></th>
+                            <th class="sortable" data-sort="villeB">{{ t('admin.twins.city_b') }} <i class="fas fa-sort"></i></th>
+                            <th class="sortable" data-sort="paysB">{{ t('admin.twins.country_b') }} <i class="fas fa-sort"></i></th>
+                            <th>{{ t('admin.distance') }}</th>
+                            <th>{{ t('admin.actions') }}</th>
                         </tr>
                     </thead>
                     <tbody id="twinTable"></tbody>
                 </table>
                 <div class="d-flex flex-wrap align-items-center justify-content-between mt-2" style="gap:8px">
                     <div class="input-group input-group-sm" style="width:auto">
-                        <div class="input-group-prepend"><span class="input-group-text">Lignes</span></div>
+                        <div class="input-group-prepend"><span class="input-group-text">{{ t('admin.rows') }}</span></div>
                         <select id="twinPageSize" class="form-control form-control-sm">
                             <option value="50">50</option>
                             <option value="100">100</option>
@@ -66,13 +66,13 @@
                         </select>
                     </div>
                     <div class="d-flex align-items-center" style="gap:4px">
-                        <button id="twinPageFirst" class="btn btn-sm btn-outline-secondary" type="button" title="Première page"><i class="fas fa-angle-double-left"></i></button>
-                        <button id="twinPagePrev" class="btn btn-sm btn-outline-secondary" type="button" title="Page précédente"><i class="fas fa-angle-left"></i></button>
+                        <button id="twinPageFirst" class="btn btn-sm btn-outline-secondary" type="button" title="{{ t('admin.page.first') }}"><i class="fas fa-angle-double-left"></i></button>
+                        <button id="twinPagePrev" class="btn btn-sm btn-outline-secondary" type="button" title="{{ t('admin.page.prev') }}"><i class="fas fa-angle-left"></i></button>
                         <span id="twinPageInfo" class="mx-2 text-nowrap">Page 1 / 1</span>
-                        <button id="twinPageNext" class="btn btn-sm btn-outline-secondary" type="button" title="Page suivante"><i class="fas fa-angle-right"></i></button>
-                        <button id="twinPageLast" class="btn btn-sm btn-outline-secondary" type="button" title="Dernière page"><i class="fas fa-angle-double-right"></i></button>
-                        <input id="twinPageGoto" type="number" min="1" class="form-control form-control-sm ml-2" style="width:70px" placeholder="N° page" />
-                        <button id="twinPageGo" class="btn btn-sm btn-outline-primary" type="button" title="Aller à la page"><i class="fas fa-arrow-right"></i></button>
+                        <button id="twinPageNext" class="btn btn-sm btn-outline-secondary" type="button" title="{{ t('admin.page.next') }}"><i class="fas fa-angle-right"></i></button>
+                        <button id="twinPageLast" class="btn btn-sm btn-outline-secondary" type="button" title="{{ t('admin.page.last') }}"><i class="fas fa-angle-double-right"></i></button>
+                        <input id="twinPageGoto" type="number" min="1" class="form-control form-control-sm ml-2" style="width:70px" placeholder="{{ t('admin.page.number') }}" />
+                        <button id="twinPageGo" class="btn btn-sm btn-outline-primary" type="button" title="{{ t('admin.page.goto') }}"><i class="fas fa-arrow-right"></i></button>
                     </div>
                 </div>
             </div>
