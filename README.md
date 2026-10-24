@@ -14,6 +14,7 @@ The bundled database contains about 1,760 cities and 4,300 twinning links, enric
 - **Bilingual interface**: the whole site, back office included, is available in French and English. Use the FR / EN switch in the top-right corner. The language is detected from the browser on the first visit.
 - **Back office** (login required):
   - manage cities and twinning links;
+  - add a city from its Wikidata id (see [Adding a city from Wikidata](#adding-a-city-from-wikidata));
   - import twin cities and population figures from Wikidata;
   - run predefined data-cleaning batches.
 
@@ -28,6 +29,17 @@ Key figures, top 10 countries, breakdown by continent, a choropleth map of twinn
 ### Back office: cities
 
 Filter the city list and edit a city. Here, Paris is loaded in the form, with its Wikidata id and population.
+
+#### Adding a city from Wikidata
+
+A new city can be added from its Wikidata id alone, for example `Q383472` for Clisson (France):
+
+1. Type the id in the **Wikidata id** field.
+2. Click the first button, **Fetch data** (*Maj Wikidata* in French). The form is filled in with the city name, country, continent, latest population figure and coordinates.
+3. Check the values and click **Save**. The new city stays loaded in the form.
+4. Click the second button, **Fetch twinnings** (*Maj jumelage Wikidata* in French), to look up the city's twin cities on Wikidata. Each one can then be added to the database and twinned with the new city.
+
+If a city with the same Wikidata id already exists, the back office offers to load it instead of creating a duplicate.
 
 ![Back office, city management filtered on Paris](docs/screenshots/admin-cities-paris.png)
 

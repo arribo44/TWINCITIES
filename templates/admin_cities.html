@@ -84,11 +84,15 @@
                             <label for="cityWikidata">{{ t('admin.cities.wikidata_id') }}
                                 <button id="openWikidataBtn" type="button" class="btn btn-sm btn-outline-info ml-2" style="vertical-align:baseline;">Wikidata</button>
                             </label>
-                            <div class="input-group">
-                                <input id="cityWikidata" class="form-control" placeholder="Q12345" />
-                                <div class="input-group-append">
-                                    <button id="wikidataFetchBtn" class="btn btn-outline-primary" type="button" disabled>{{ t('admin.cities.wikidata_fetch') }}</button>
-                                </div>
+                            <input id="cityWikidata" class="form-control" placeholder="Q383472" autocomplete="off" />
+                            <!-- 1er choix : remplir la fiche ; 2e choix : chercher les jumelages -->
+                            <div class="d-flex flex-column mt-1" style="gap:4px">
+                                <button id="wikidataCityBtn" class="btn btn-sm btn-primary text-left" type="button" disabled title="{{ t('admin.cities.wikidata_city_title') }}">
+                                    <i class="fas fa-download fa-fw"></i> {{ t('admin.cities.wikidata_city') }}
+                                </button>
+                                <button id="wikidataFetchBtn" class="btn btn-sm btn-outline-primary text-left" type="button" disabled title="{{ t('admin.cities.wikidata_fetch_title') }}">
+                                    <i class="fas fa-handshake fa-fw"></i> {{ t('admin.cities.wikidata_fetch') }}
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -119,6 +123,7 @@
                             </div>
                         </div>
                     </div>
+                    <div id="cityFormStatus" class="small" role="status" aria-live="polite"></div>
                 </form>
                 <hr />
                 <table class="table table-sm table-hover">

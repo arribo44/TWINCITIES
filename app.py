@@ -939,7 +939,10 @@ def api_admin_add_city():
         app.logger.debug(f"api_admin_add_city invalid habitants, data: {data}")
         return jsonify({"error": t("error.population_int")}), 400
     # If id_wikidata provided, avoid duplicate: return existing id
-    id_wd = (data.get("id_wikidata") or "").strip()
+    raw_wd = (data.get("id_wikidata") or "").strip()
+    id_wd = normalize_qid(raw_wd) if raw_wd else ""
+    if raw_wd and not id_wd:
+        return jsonify({"error": t("error.invalid_qid")}), 400
     if id_wd:
         existing = query_db("SELECT id FROM Villes WHERE id_wikidata = ?", (id_wd,), one=True)
         if existing:
@@ -990,6 +993,16 @@ def api_admin_update_city(city_id):
             data["habitants"] = int(data["habitants"])
     except (TypeError, ValueError):
         return jsonify({"error": t("error.population_int")}), 400
+
+    raw_wd = (data.get("id_wikidata") or "").strip()
+    data["id_wikidata"] = normalize_qid(raw_wd) if raw_wd else None
+    if raw_wd and not data["id_wikidata"]:
+        return jsonify({"error": t("error.invalid_qid")}), 400
+    duplicate = data["id_wikidata"] and query_db(
+        "SELECT id, nom FROM Villes WHERE id_wikidata = ? AND id <> ?", (data["id_wikidata"], city_id), one=True
+    )
+    if duplicate:
+        return jsonify({"error": t("error.qid_used", qid=data["id_wikidata"], city=duplicate["nom"])}), 409
 
     execute_db(
         "UPDATE Villes SET nom = ?, habitants = ?, pays = ?, continent = ?, latitude = ?, longitude = ?, id_wikidata = ? WHERE id = ?",
@@ -1076,16 +1089,125 @@ def api_admin_execute_batch(batch_id):
     return jsonify({"rows_affected": rows_affected, "duration_ms": duration_ms})
 
 
+WIKIDATA_SPARQL_URL = "https://query.wikidata.org/sparql"
+QID_RE = re.compile(r"^Q?(\d{1,12})$", re.IGNORECASE)
+
+
+def normalize_qid(value):
+    """Renvoie l'identifiant Wikidata sous la forme 'Q123', ou None s'il est invalide.
+
+    La validation est stricte car l'identifiant est inséré dans les requêtes SPARQL.
+    """
+    match = QID_RE.match((value or "").strip())
+    return f"Q{match.group(1)}" if match else None
+
+
+def run_sparql(query, timeout=20):
+    params = urllib.parse.urlencode({"query": query})
+    req = urllib.request.Request(f"{WIKIDATA_SPARQL_URL}?{params}")
+    req.add_header("Accept", "application/sparql-results+json")
+    req.add_header("User-Agent", "TwinCities/1.0 (https://github.com/arribo44/TWINCITIES)")
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return json.load(resp).get("results", {}).get("bindings", [])
+
+
+def parse_wikidata_point(value):
+    # les coordonnées arrivent sous la forme "Point(LON LAT)"
+    match = re.search(r"Point\(([-0-9eE.+]+) ([-0-9eE.+]+)\)", value or "")
+    if not match:
+        return None, None
+    return float(match.group(2)), float(match.group(1))
+
+
+def fetch_wikidata_city(qid):
+    """Nom, pays, continent, population la plus récente et coordonnées d'une ville Wikidata."""
+    bindings = run_sparql(
+        "SELECT ?itemLabel ?countryLabel ?itemContinentLabel ?countryContinentLabel ?coord ?population ?popDate WHERE {\n"
+        f"  BIND(wd:{qid} AS ?item)\n"
+        "  OPTIONAL { ?item wdt:P17 ?country. OPTIONAL { ?country wdt:P30 ?countryContinent. } }\n"
+        "  OPTIONAL { ?item wdt:P30 ?itemContinent. }\n"
+        "  OPTIONAL { ?item wdt:P625 ?coord. }\n"
+        "  OPTIONAL { ?item p:P1082 ?popStmt. ?popStmt ps:P1082 ?population. OPTIONAL { ?popStmt pq:P585 ?popDate. } }\n"
+        '  SERVICE wikibase:label { bd:serviceParam wikibase:language "fr,en". }\n'
+        "}\n"
+    )
+    value = lambda b, key: b.get(key, {}).get("value")
+    name = next((value(b, "itemLabel") for b in bindings if value(b, "itemLabel")), None)
+    # sans libellé, le service renvoie l'identifiant lui-même : l'élément n'existe pas
+    if not name or name == qid:
+        return None
+
+    country = next((value(b, "countryLabel") for b in bindings if value(b, "countryLabel")), None)
+    latitude = longitude = None
+    for b in bindings:
+        latitude, longitude = parse_wikidata_point(value(b, "coord"))
+        if latitude is not None:
+            break
+
+    # continent de la ville en priorité, sinon celui du pays
+    item_continents = {value(b, "itemContinentLabel") for b in bindings} - {None}
+    country_continents = {value(b, "countryContinentLabel") for b in bindings} - {None}
+    candidates = sorted(item_continents or country_continents)
+    continent = candidates[0] if candidates else None
+    if len(candidates) > 1 and country:
+        # pays transcontinental (Russie, Turquie…) : on reprend le continent déjà utilisé en base pour ce pays
+        known = query_db(
+            "SELECT continent FROM Villes WHERE pays = ? GROUP BY continent ORDER BY COUNT(*) DESC LIMIT 1",
+            (country,),
+            one=True,
+        )
+        if known and known["continent"] in candidates:
+            continent = known["continent"]
+
+    # population la plus récente ; une valeur sans date ne sert que s'il n'y en a aucune datée
+    population = population_date = None
+    for b in bindings:
+        try:
+            pop = int(float(value(b, "population")))
+        except (TypeError, ValueError):
+            continue
+        date = value(b, "popDate")
+        if date and (population_date is None or date > population_date):
+            population, population_date = pop, date
+        elif population is None and population_date is None:
+            population = pop
+
+    return {
+        "wikidata": qid,
+        "nom": name,
+        "pays": country,
+        "continent": continent,
+        "habitants": population,
+        "population_date": population_date[:10] if population_date else None,
+        "latitude": latitude,
+        "longitude": longitude,
+    }
+
+
+@app.route("/api/admin/wikidata_city")
+@login_required
+def api_admin_wikidata_city():
+    qid = normalize_qid(request.args.get("wikidata"))
+    if not qid:
+        return jsonify({"error": t("error.invalid_qid")}), 400
+    try:
+        city = fetch_wikidata_city(qid)
+    except Exception as e:
+        app.logger.exception("Erreur SPARQL ville")
+        return jsonify({"error": t("error.sparql"), "details": str(e)}), 502
+    if city is None:
+        return jsonify({"error": t("error.wikidata_not_found", qid=qid)}), 404
+    existing = query_db("SELECT id, nom FROM Villes WHERE id_wikidata = ?", (qid,), one=True)
+    city["existing"] = dict(existing) if existing else None
+    return jsonify(city)
+
+
 @app.route("/api/admin/wikidata_twins")
 @login_required
 def api_admin_wikidata_twins():
-    wikidata = (request.args.get("wikidata") or "").strip()
+    wikidata = normalize_qid(request.args.get("wikidata"))
     if not wikidata:
-        return jsonify({"error": t("error.wikidata_param")}), 400
-
-    # Normalize to Qxxx
-    if not wikidata.upper().startswith("Q"):
-        wikidata = f"Q{wikidata}"
+        return jsonify({"error": t("error.invalid_qid")}), 400
     wd_uri = f"wd:{wikidata}"
     sparql = (
         "SELECT ?twin ?twinLabel ?countryLabel ?continentLabel ?countryContinentLabel ?coord "
@@ -1195,9 +1317,9 @@ def api_admin_wikidata_twins():
 
 def fetch_wikidata_population(id_wikidata):
     """Looks up the most recent population (P1082) for a Wikidata id. Returns None if not found."""
-    wd = id_wikidata.strip().upper()
-    if not wd.startswith("Q"):
-        wd = f"Q{wd}"
+    wd = normalize_qid(id_wikidata)
+    if not wd:
+        return None
 
     wd_uri = f"wd:{wd}"
     sparql = (

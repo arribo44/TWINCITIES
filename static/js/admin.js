@@ -26,7 +26,8 @@ function fetchJson(url, options = {}) {
             return Promise.reject({ error: t("error.auth_required") });
         }
         if (!response.ok) {
-            return response.json().then((j) => Promise.reject(j)).catch(() => Promise.reject({ error: t("error.network") }));
+            // le message d'erreur du serveur est conservé ; « erreur réseau » seulement si la réponse n'est pas du JSON
+            return response.json().then((j) => Promise.reject(j), () => Promise.reject({ error: t("error.network") }));
         }
         return response.json();
     });
@@ -300,6 +301,85 @@ function resetCityForm() {
     if (f) f.reset();
     const id = document.getElementById("cityId");
     if (id) id.value = "";
+    const populationBtn = document.getElementById('cityWikidataUpdateBtn');
+    if (populationBtn) populationBtn.style.display = 'none';
+    const wdInput = document.getElementById("cityWikidata");
+    if (wdInput) wdInput.dispatchEvent(new Event('input'));
+    setFormStatus("");
+}
+
+// message sous le formulaire ; kind : "info", "success" ou "danger"
+function setFormStatus(message, kind = "info") {
+    const el = document.getElementById("cityFormStatus");
+    if (!el) return;
+    el.className = message ? `small mt-2 text-${kind === "info" ? "muted" : kind}` : "small";
+    el.textContent = message;
+}
+
+function loadCityIntoForm(city) {
+    document.getElementById("cityId").value = city.id;
+    document.getElementById("cityName").value = city.nom;
+    document.getElementById("cityCountry").value = city.pays;
+    document.getElementById("cityContinent").value = city.continent;
+    document.getElementById("cityWikidata").value = city.id_wikidata || "";
+    // trigger input event so the Wikidata buttons update their disabled state
+    document.getElementById("cityWikidata").dispatchEvent(new Event('input'));
+    document.getElementById("cityPopulation").value = city.habitants || "";
+    // show the population update button when habitants is empty/null/non-numeric
+    const btn = document.getElementById('cityWikidataUpdateBtn');
+    const h = city.habitants;
+    const show = (h === null || h === undefined || h === '' || Number.isNaN(Number(h)));
+    if (btn) btn.style.display = show ? 'inline-block' : 'none';
+    document.getElementById("cityLatitude").value = city.latitude;
+    document.getElementById("cityLongitude").value = city.longitude;
+    setFormStatus("");
+}
+
+// 1er bouton : remplit la fiche (nom, pays, continent, habitants, coordonnées) depuis Wikidata
+function fillCityFromWikidata(button) {
+    const code = document.getElementById("cityWikidata").value.trim();
+    if (!code) return;
+    button.disabled = true;
+    setFormStatus(t("admin.cities.wikidata_loading"));
+    fetchJson(`/api/admin/wikidata_city?wikidata=${encodeURIComponent(code)}`).then((data) => {
+        const currentId = parseInt(document.getElementById("cityId").value, 10) || null;
+        if (data.existing && data.existing.id !== currentId) {
+            const city = adminState.cities.find((c) => c.id === data.existing.id);
+            if (city && confirm(t("admin.cities.exists_confirm", { city: data.existing.nom, qid: data.wikidata }))) {
+                loadCityIntoForm(city);
+            } else {
+                setFormStatus("");
+            }
+            return;
+        }
+        const fields = [
+            ["cityName", data.nom, "admin.name"],
+            ["cityCountry", data.pays, "admin.country"],
+            ["cityContinent", data.continent, "admin.continent"],
+            ["cityPopulation", data.habitants, "admin.population"],
+            ["cityLatitude", data.latitude, "admin.latitude"],
+            ["cityLongitude", data.longitude, "admin.longitude"],
+        ];
+        const missing = [];
+        fields.forEach(([id, value, labelKey]) => {
+            if (value === null || value === undefined || value === "") {
+                missing.push(t(labelKey));
+            } else {
+                document.getElementById(id).value = value;
+            }
+        });
+        document.getElementById("cityWikidata").value = data.wikidata;
+        const populationBtn = document.getElementById('cityWikidataUpdateBtn');
+        if (populationBtn && data.habitants != null) populationBtn.style.display = 'none';
+        const parts = [t("admin.cities.wikidata_loaded", { city: data.nom })];
+        if (data.population_date) parts.push(t("admin.cities.wikidata_population_year", { year: data.population_date.slice(0, 4) }));
+        if (missing.length) parts.push(t("admin.cities.wikidata_missing", { fields: missing.join(", ") }));
+        setFormStatus(parts.join(" "), missing.length ? "warning" : "success");
+    }).catch((err) => {
+        setFormStatus((err && err.error) ? err.error : t("admin.cities.wikidata_fetch_error"), "danger");
+    }).finally(() => {
+        button.disabled = !document.getElementById("cityWikidata").value.trim();
+    });
 }
 
 function bindCityForm() {
@@ -322,12 +402,20 @@ function bindCityForm() {
         const method = cityId ? "PUT" : "POST";
         const url = cityId ? `/api/admin/cities/${cityId}` : "/api/admin/cities";
 
-                fetchJson(url, { method, body: JSON.stringify(payload) }).then(() => {
-                    if (!cityId) {
-                        resetCityForm();
-                    }
-                    loadAdminData();
-                }).catch(() => {});
+        fetchJson(url, { method, body: JSON.stringify(payload) }).then((resp) => {
+            return loadAdminData().then(() => {
+                if (cityId) {
+                    setFormStatus(t("admin.cities.saved"), "success");
+                    return;
+                }
+                // nouvelle ville : on la garde dans le formulaire pour enchaîner sur ses jumelages
+                const created = adminState.cities.find((c) => c.id === resp.id);
+                if (created) loadCityIntoForm(created);
+                setFormStatus(t("admin.cities.saved_new", { city: payload.nom, button: t("admin.cities.wikidata_fetch") }), "success");
+            });
+        }).catch((err) => {
+            setFormStatus(t("admin.cities.save_error", { msg: (err && err.error) ? err.error : t("error.network") }), "danger");
+        });
     });
 
     if (wikidataUpdateBtn) {
@@ -358,13 +446,20 @@ function bindCityForm() {
     // enable/disable Wikidata fetch and open buttons when wikidata input changes
     const wikidataInput = document.getElementById("cityWikidata");
     const wikidataBtn = document.getElementById("wikidataFetchBtn");
+    const wikidataCityBtn = document.getElementById("wikidataCityBtn");
     const openWikidataBtn = document.getElementById("openWikidataBtn");
     function updateWikidataBtn() {
         if (!wikidataInput) return;
         const v = (wikidataInput.value || "").trim();
         if (wikidataBtn) wikidataBtn.disabled = v === "";
+        if (wikidataCityBtn) wikidataCityBtn.disabled = v === "";
         if (openWikidataBtn) openWikidataBtn.disabled = v === "";
     }
+    if (wikidataCityBtn) wikidataCityBtn.addEventListener("click", () => fillCityFromWikidata(wikidataCityBtn));
+    // Entrée dans le champ Wikidata : remplit la fiche au lieu d'enregistrer le formulaire
+    if (wikidataInput) wikidataInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); if (wikidataCityBtn && !wikidataCityBtn.disabled) fillCityFromWikidata(wikidataCityBtn); }
+    });
     if (wikidataInput) wikidataInput.addEventListener("input", updateWikidataBtn);
     updateWikidataBtn();
 
@@ -420,24 +515,7 @@ function bindTableActions() {
             if (action === "edit") {
                 const city = adminState.cities.find((item) => item.id === parseInt(id, 10));
                 if (!city) return;
-                document.getElementById("cityId").value = city.id;
-                document.getElementById("cityName").value = city.nom;
-                document.getElementById("cityCountry").value = city.pays;
-                document.getElementById("cityContinent").value = city.continent;
-                document.getElementById("cityWikidata").value = city.id_wikidata || "";
-                // trigger input event so the Wikidata button updates its disabled state
-                const wdInput = document.getElementById("cityWikidata");
-                if (wdInput) wdInput.dispatchEvent(new Event('input'));
-                document.getElementById("cityPopulation").value = city.habitants || "";
-                // show MAJ Wikidata button when habitants is empty/null/non-numeric
-                try {
-                    const btn = document.getElementById('cityWikidataUpdateBtn');
-                    const h = city.habitants;
-                    const show = (h === null || h === undefined || h === '' || Number.isNaN(Number(h)));
-                    if (btn) btn.style.display = show ? 'inline-block' : 'none';
-                } catch (e) {}
-                document.getElementById("cityLatitude").value = city.latitude;
-                document.getElementById("cityLongitude").value = city.longitude;
+                loadCityIntoForm(city);
                 window.scrollTo({ top: 0, behavior: "smooth" });
             }
             if (action === "delete" && confirm(t("admin.cities.confirm_delete"))) {
