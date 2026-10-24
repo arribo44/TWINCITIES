@@ -1,0 +1,44 @@
+{% extends "admin.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card card-info">
+            <div class="card-header">
+                <h3 class="card-title">Tableau de bord admin</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="info-box bg-info">
+                            <span class="info-box-icon"><i class="fas fa-city"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Villes</span>
+                                <span id="adminTotalCities" class="info-box-number">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="info-box bg-success">
+                            <span class="info-box-icon"><i class="fas fa-handshake"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Jumelages</span>
+                                <span id="adminTotalTwins" class="info-box-number">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="info-box bg-warning">
+                            <span class="info-box-icon"><i class="fas fa-route"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Distance moyenne</span>
+                                <span id="adminAvgDistance" class="info-box-number">0 km</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

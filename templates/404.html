@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ t('404.title') }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        :root {
+            --bg: #f4f6f9;
+            --card: #ffffff;
+            --text: #343a40;
+            --muted: #6c757d;
+            --accent: #007bff;
+            --accent-2: #ffc107;
+            --city-a: #3d5a80;
+            --city-b: #98c1d9;
+            --window: #ffe8a3;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #1b1f24;
+                --card: #262b31;
+                --text: #e9ecef;
+                --muted: #adb5bd;
+                --accent: #4dabf7;
+                --city-a: #5c7fa8;
+                --city-b: #3b5269;
+                --window: #ffd866;
+                --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            }
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .card {
+            width: 100%;
+            max-width: 680px;
+            background: var(--card);
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+            padding: 32px 28px 28px;
+            text-align: center;
+        }
+        .scene { width: 100%; height: auto; display: block; }
+        .skyline-a { fill: var(--city-a); }
+        .skyline-b { fill: var(--city-b); }
+        .win { fill: var(--window); animation: blink 4s infinite; }
+        .win:nth-child(3n) { animation-delay: 1.3s; }
+        .win:nth-child(4n) { animation-delay: 2.7s; }
+        .ground { stroke: var(--muted); stroke-width: 2; opacity: 0.4; }
+        .link {
+            fill: none;
+            stroke: var(--accent);
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-dasharray: 8 10;
+            animation: travel 1.2s linear infinite;
+        }
+        .pin { fill: var(--accent); }
+        .code {
+            font-size: 64px;
+            font-weight: 800;
+            fill: var(--text);
+            letter-spacing: 2px;
+        }
+        .broken { fill: var(--accent-2); font-size: 26px; }
+        h1 { font-size: 1.6rem; margin: 18px 0 8px; }
+        p { color: var(--muted); line-height: 1.5; margin: 0 auto 8px; max-width: 520px; }
+        .path { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text); word-break: break-all; }
+        .fact {
+            margin: 22px auto 0;
+            padding: 14px 16px;
+            border-radius: 10px;
+            background: rgba(0, 123, 255, 0.08);
+            max-width: 520px;
+            text-align: left;
+            font-size: 0.95rem;
+        }
+        .fact strong { color: var(--text); }
+        .fact img { width: 20px; height: auto; vertical-align: -3px; margin: 0 4px; border-radius: 2px; }
+        .actions { margin-top: 24px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid var(--accent);
+        }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-outline { color: var(--accent); }
+        .btn:hover { filter: brightness(1.1); }
+        .lang-corner { position: fixed; top: 16px; right: 16px; }
+        .lang-switch { display: inline-flex; border-radius: 6px; overflow: hidden; border: 2px solid var(--accent); }
+        .lang-switch .btn { border: 0; border-radius: 0; padding: 4px 10px; font-size: 0.85rem; }
+        .lang-switch .btn-outline-primary { color: var(--accent); background: var(--card); }
+        .lang-switch .btn-primary { background: var(--accent); color: #fff; }
+        @keyframes travel { to { stroke-dashoffset: -36; } }
+        @keyframes blink { 0%, 90%, 100% { opacity: 1; } 95% { opacity: 0.2; } }
+        @media (prefers-reduced-motion: reduce) {
+            .link, .win { animation: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="lang-corner">{% include "_lang_switch.html" %}</div>
+<main class="card">
+    <svg class="scene" viewBox="0 0 600 230" role="img" aria-label="{{ t('404.svg_label') }}">
+        <!-- ville de gauche -->
+        <g class="skyline-a">
+            <rect x="30" y="140" width="28" height="70" />
+            <rect x="62" y="110" width="34" height="100" />
+            <rect x="100" y="150" width="22" height="60" />
+            <rect x="126" y="125" width="30" height="85" />
+            <polygon points="79,110 79,92 81,92 81,110" />
+        </g>
+        <g>
+            <rect class="win" x="68" y="122" width="6" height="8" />
+            <rect class="win" x="82" y="140" width="6" height="8" />
+            <rect class="win" x="68" y="160" width="6" height="8" />
+            <rect class="win" x="134" y="138" width="6" height="8" />
+            <rect class="win" x="142" y="165" width="6" height="8" />
+            <rect class="win" x="38" y="155" width="6" height="8" />
+        </g>
+        <!-- ville de droite -->
+        <g class="skyline-b">
+            <rect x="444" y="130" width="30" height="80" />
+            <rect x="478" y="100" width="26" height="110" />
+            <polygon points="478,100 491,78 504,100" />
+            <rect x="508" y="145" width="34" height="65" />
+            <rect x="546" y="120" width="24" height="90" />
+        </g>
+        <g>
+            <rect class="win" x="452" y="145" width="6" height="8" />
+            <rect class="win" x="487" y="118" width="6" height="8" />
+            <rect class="win" x="487" y="150" width="6" height="8" />
+            <rect class="win" x="518" y="160" width="6" height="8" />
+            <rect class="win" x="554" y="135" width="6" height="8" />
+            <rect class="win" x="554" y="170" width="6" height="8" />
+        </g>
+        <line class="ground" x1="20" y1="210" x2="580" y2="210" />
+        <!-- lien de jumelage interrompu au milieu -->
+        <path class="link" d="M 92 100 Q 160 20 235 40" />
+        <path class="link" d="M 365 40 Q 440 20 491 72" />
+        <circle class="pin" cx="92" cy="100" r="6" />
+        <circle class="pin" cx="491" cy="72" r="6" />
+        <text class="code" x="300" y="72" text-anchor="middle">404</text>
+        <text class="broken" x="300" y="108" text-anchor="middle">&#x2702;</text>
+    </svg>
+
+    <h1>{{ t('404.heading') }}</h1>
+    <p>
+        {{ t('404.text_before') }}
+        <span class="path">{{ path }}</span>
+        {{ t('404.text_after') }}
+    </p>
+
+    {% if fact %}
+    <div class="fact">
+        <i class="fas fa-lightbulb" style="color: var(--accent-2)"></i>
+        {% set km = "{:,.0f}".format(fact.distance_km) %}
+        {{ t('404.fact_intro') }}
+        <img src="/flag?country={{ fact.pays1 | urlencode }}" alt="" onerror="this.remove()" /><strong>{{ fact.ville1 }}</strong> (<span data-country="{{ fact.pays1 }}">{{ fact.pays1 }}</span>)
+        {{ t('404.fact_twinned') }}
+        <img src="/flag?country={{ fact.pays2 | urlencode }}" alt="" onerror="this.remove()" /><strong>{{ fact.ville2 }}</strong> (<span data-country="{{ fact.pays2 }}">{{ fact.pays2 }}</span>),
+        {{ t('404.fact_distance', km=km.replace(",", "\u202f") if lang == "fr" else km) }}
+    </div>
+    {% endif %}
+
+    <div class="actions">
+        <a class="btn btn-primary" href="/"><i class="fas fa-globe-europe"></i> {{ t('404.back_map') }}</a>
+        <a class="btn btn-outline" href="/stats"><i class="fas fa-chart-bar"></i> {{ t('404.stats') }}</a>
+    </div>
+</main>
+{% include "_i18n.html" %}
+</body>
+</html>

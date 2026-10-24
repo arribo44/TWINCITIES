@@ -1,0 +1,22 @@
+# Secrets
+.env
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Local tooling and editor settings
+.vscode/
+.idea/
+.claude/
+cookies.txt
+
+# Source documents (third-party, not redistributed)
+DATA/
+
+# SQLite temporary files (the database itself, twin_cities.db, is published)
+*.db-journal
+*.db-wal
+*.db-shm

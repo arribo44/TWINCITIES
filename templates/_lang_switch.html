@@ -1,0 +1,8 @@
+<div class="btn-group btn-group-sm lang-switch" role="group" aria-label="{{ t('lang.switch') }}">
+    {% for code, label in languages.items() %}
+    <a href="/lang/{{ code }}?next={{ request.full_path.rstrip('?') | urlencode }}"
+       class="btn {{ 'btn-primary' if code == lang else 'btn-outline-primary' }}"
+       hreflang="{{ code }}" lang="{{ code }}" title="{{ label }}"
+       {% if code == lang %}aria-current="true"{% endif %}>{{ code | upper }}</a>
+    {% endfor %}
+</div>
